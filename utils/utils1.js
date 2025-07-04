@@ -2,7 +2,6 @@ import jwt from 'jsonwebtoken'
 
 export function authentication(req,res,next){
     const authHeader=req.headers['authorization'];
-    console.log(authHeader);
     const token= authHeader ;
     //take the string after bearer:---
     if(!token){
