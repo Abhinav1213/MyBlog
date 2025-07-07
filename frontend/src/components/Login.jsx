@@ -4,7 +4,7 @@ import { useState } from "react";
 const Login = () => {
     const [authData, setAuthData]=useState({email:"",password:""});
     const navigate=useNavigate();
-    
+
     const checkLogin=async(e)=>{
         e.preventDefault();
         try{
@@ -18,7 +18,10 @@ const Login = () => {
                     password:authData.password
                 })
             })
-            console.log(response);
+            if(response.status===201){
+                navigate("/")
+            }
+            // console.log(response.status);
         }catch(err){
             console.log('Unable to fetch login api');
         }

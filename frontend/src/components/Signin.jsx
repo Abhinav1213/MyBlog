@@ -24,8 +24,10 @@ const Signin = () => {
                     username: form.username,
                 })
             })
-            console.log(response);
-            
+            // console.log(response);
+            if(response.status===201){
+                navigate("/")
+            }
         } catch (err) {
             console.log('Error in signin.');
         }

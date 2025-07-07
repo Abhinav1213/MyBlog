@@ -24,7 +24,7 @@ router.post('/login',async(req,res)=>{
             const token=jwt.sign({
                 email:user.email, username:user.username
             },process.env.JWT_SECRET,{expiresIn:'1h'})
-            return res.json({message:"Login Successful",token})
+            return res.status(201).json({message:"Login Successful",token})
         }
         return res.json({message:"Invalid credentials"})
     }catch(err){
@@ -35,7 +35,7 @@ router.post('/login',async(req,res)=>{
 
 router.post('/signUp',async(req,res)=>{
     const{email,password,username}=req.body;
-    console.log(req.body);
+    // console.log(req.body);
     try{
         const [rows]=await db_connect.execute('select * from user where email=?',
             [email])
