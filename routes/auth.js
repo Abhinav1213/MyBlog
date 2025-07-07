@@ -13,7 +13,7 @@ router.post('/login',async(req,res)=>{
         const [row_password]=await db_connect.execute('select * from user where email=?',
             [email]
         )
-        // console.log(row_password);
+        console.log(row_password);
         if(row_password.length===0){
             return res.json({message:'Email not exist signUp first.'});
         }
@@ -35,6 +35,7 @@ router.post('/login',async(req,res)=>{
 
 router.post('/signUp',async(req,res)=>{
     const{email,password,username}=req.body;
+    console.log(req.body);
     try{
         const [rows]=await db_connect.execute('select * from user where email=?',
             [email])
