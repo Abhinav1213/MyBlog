@@ -1,6 +1,10 @@
+import Navbar from "../components/Navbar"
+
 const AuthPage=()=>{
     return(
-        <>AuthPage</>
+        <div>
+            <div><Navbar/></div>
+        </div>
     )
 }
 
