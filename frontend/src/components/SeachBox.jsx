@@ -1,11 +1,13 @@
 import { useEffect } from "react";
 import { useAuth } from "../context/authContext";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const SearchBox = ({ value, setValue }) => {
     const { allUsers } = useAuth()
     const [user_matched, setUser_matched] = useState([])
     const data = allUsers.users
+    const navigate=useNavigate();
     useEffect(() => {
         data.filter((val) => {
             if (val.username.toLowerCase().includes(value.toLowerCase())) {
@@ -32,7 +34,9 @@ const SearchBox = ({ value, setValue }) => {
                                 onClick={() => {
                                     setValue(val.username)
                                     //important concept here :--
-                                    setTimeout(() => setUser_matched([]), 100);
+                                    setTimeout(() => {setUser_matched([])
+                                    navigate(`/user/${val.username}`)}
+                                    , 1000);
                                 }}
                             >
                                 {val.username}

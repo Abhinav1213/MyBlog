@@ -10,16 +10,12 @@ CREATE TABLE IF NOT EXISTS posts (
 );
 `;
 
-export const DROP_POSTS_TABLE = `
-DROP TABLE IF EXISTS posts;
-`;
-
 export const USER_TABLE=`
 CREATE TABLE IF NOT EXISTS user(
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(50) NOT NULL UNIQUE,
-    photo VARCHAR(255) DEFAULT '',
+    photo VARCHAR(255) DEFAULT 'https://media.licdn.com/dms/image/v2/D5603AQHwZZJxxkeVmg/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1725872588768?e=1757548800&v=beta&t=qjNtntg3kfRnplhm-xC_bQ7ZkuUxZnD16lc0su4o1ig',
     password text,
     followers INT DEFAULT 0
 )
