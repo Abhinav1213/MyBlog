@@ -5,8 +5,9 @@ const AuthContext=createContext(null)
 
 export const AuthProvider=(props)=>{
     const [loginCred, setLoginCred]=useState({username:"",email:""})
+    const [allUsers, setAllUsers]=useState([])
     return(
-        <AuthContext.Provider value={{loginCred, setLoginCred}}>
+        <AuthContext.Provider value={{loginCred, setLoginCred, allUsers, setAllUsers}}>
             {props.children}
         </AuthContext.Provider>
     )
