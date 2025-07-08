@@ -1,14 +1,15 @@
-import express from 'express'
-import bcrypt from 'bcrypt'
-import jwt from 'jsonwebtoken'
-import { db_connect } from '../db/db_connect.js'
-import { authentication } from '../utils/utils1.js'
-import { signUpSchema, loginSchema } from '../validation/auth.js'
-import { validate } from '../utils/input_validation.js'
+import express from "express";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import { db_connect } from "../db/db_connect.js";
+import { authentication } from "../utils/utils1.js";
+import { signUpSchema, loginSchema } from "../validation/auth.js";
+import { bearerSchema } from "../validation/header.js";
+import { validate } from "../utils/input_validation.js";
 
-const router=express.Router();
+const router = express.Router();
 
-router.post("/signUp", validate(signUpSchema), async (req, res) => {
+router.post("/signUp", validate({ body: signUpSchema }), async (req, res) => {
   const { email, password, username } = req.body;
   if (!process.env.JWT_SECRET) {
     console.log("JWT SECRET not configured!");
@@ -44,7 +45,7 @@ router.post("/signUp", validate(signUpSchema), async (req, res) => {
   }
 });
 
-router.post("/login", validate(loginSchema), async (req, res) => {
+router.post("/login", validate({ body: loginSchema }), async (req, res) => {
   const { email, password } = req.body;
   if (!process.env.JWT_SECRET) {
     console.log("JWT SECRET not configured!");
@@ -93,19 +94,23 @@ router.post("/login", validate(loginSchema), async (req, res) => {
   }
 });
 
-router.delete('/deleteAccount', authentication, async(req,res)=>{
-    const {email}=req.user;
-    try{
-        const [rows]=await db_connect.execute('delete from user where email=?',[email]);
-        if(rows.affectedRows===0){
-            return res.status(201).json({message:'This user is not in our database.'})
-        }
-        return res.status(201).json({message:'User Deleted Successfully'})
+router.delete(
+  "/deleteAccount",
+  validate({ headers: bearerSchema }),
+  authentication,
+  async (req, res) => {
+    const user = req.user;
+    try {
+      await db_connect.execute("delete from user where email=?", [user.email]);
+      return res.status(201).json({ message: "User Deleted Successfully" });
+    } catch (err) {
+      console.log("Error in deleteAccount:", err);
+      return res.status(500).json({
+        message: "Server Error",
+        error: process.env.NODE_ENV === "development" ? err.message : undefined,
+      });
     }
-    catch(err){
-        console.log('Error in deleting yourselves', err);
-        res.status(501).json({message:'Server Error'})
-    }
-})
+  }
+);
 
 export default router;
