@@ -7,7 +7,7 @@ import compression from "compression";
 import dotenv from "dotenv";
 import rateLimit from "express-rate-limit";
 
-import { WebSocketServer } from "ws"
+import { WebSocketServer } from "ws";
 
 import { CREATE_POSTS_TABLE, USER_TABLE } from "./schema/post_schema.js";
 import { db_connect } from "./db/db_connect.js";
@@ -25,7 +25,7 @@ try {
   console.error("Error creating posts table:", err);
 }
 
-const app=express();
+const app = express();
 app.use(express.json());
 app.use(cors({ origin: process.env.ALLOWED_ORIGINS || "*" }));
 app.use(helmet());
@@ -72,17 +72,16 @@ app.use((req, res) => {
   });
 });
 
-const httpServer=app.listen(8080,()=>{
+const httpServer = app.listen(8080, () => {
   console.log("app started on port 8080");
 });
 
-const wss=new WebSocketServer({server:httpServer});
-wss.on('connection',(ws)=>{
-    ws.on('error',(err)=>console.log(err))
-    console.log('connection established!!');
-    ws.on('message',(data)=>{
-        console.log('Server one!!!'); 
-    })
-    ws.send("hello from server")
-
-})
+const wss = new WebSocketServer({ server: httpServer });
+wss.on("connection", (ws) => {
+  ws.on("error", (err) => console.log(err));
+  console.log("connection established!!");
+  ws.on("message", (data) => {
+    console.log("Server one!!!");
+  });
+  ws.send("hello from server");
+});
