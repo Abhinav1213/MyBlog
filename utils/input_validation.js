@@ -1,23 +1,34 @@
-export const validate = (schema) => (req, res, next) => {
-  try {
-    req.body = schema.parse(req.body);
-    next();
-  } catch (err) {
-    const fieldErrors = err.errors.map((e) => ({
-      field: e.path.join("."),
-      message: e.message,
-    }));
+export const validate = (schemas) => (req, res, next) => {
+  const locations = ["body", "headers", "params", "query"];
+  const errors = [];
 
+  for (const key of locations) {
+    if (schemas[key]) {
+      try {
+        req[key] = schemas[key].parse(req[key]);
+      } catch (err) {
+        const fieldErrors = err.errors.map((e) => ({
+          location: key,
+          field: e.path.join("."),
+          message: e.message,
+        }));
+        errors.push(...fieldErrors);
+      }
+    }
+  }
+
+  if (errors.length > 0) {
     console.warn("⚠️ Validation failed:", {
       route: req.originalUrl,
       method: req.method,
-      body: req.body,
-      errors: fieldErrors,
+      errors,
     });
 
     return res.status(400).json({
       message: "Validation error",
-      errors: fieldErrors,
+      errors,
     });
   }
+
+  next();
 };
