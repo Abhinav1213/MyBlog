@@ -18,10 +18,10 @@ const Login = () => {
                     password:authData.password
                 })
             })
-            if(response.status===201){
+            if(response.status===200){
                 navigate("/")
             }
-            // console.log(response.status);
+            console.log(response.status);
         }catch(err){
             console.log('Unable to fetch login api');
         }

@@ -1,20 +1,19 @@
-import express from "express";
-import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import compression from "compression";
-
-import dotenv from "dotenv";
+import express from 'express'
+import { CREATE_POSTS_TABLE, USER_TABLE } from './schema/post_schema.js'
+import dotenv from 'dotenv'
+import cors from 'cors'
+import {db_connect } from './db/db_connect.js'
+import GettingPosts from './routes/getting_posts.js'
+import PostingPosts from "./routes/posting_posts.js"
+import authProcess from "./routes/auth.js"
+import allusers from "./routes/users.js"
+import { WebSocketServer } from 'ws'
 import rateLimit from "express-rate-limit";
 
-import { WebSocketServer } from "ws";
 
-import { CREATE_POSTS_TABLE, USER_TABLE } from "./schema/post_schema.js";
-import { db_connect } from "./db/db_connect.js";
-
-import GettingPosts from "./routes/getting_posts.js";
-import PostingPosts from "./routes/posting_posts.js";
-import authProcess from "./routes/auth.js";
 
 dotenv.config();
 try {
@@ -55,6 +54,10 @@ const apiLimiter = rateLimit({
   },
 });
 app.use(apiLimiter);
+app.use('/get',GettingPosts);
+app.use('/post',PostingPosts);
+app.use('/auth', authProcess);
+app.use('/user', allusers);
 
 app.get("/", (req, res) => {
   res.status(200).json({
