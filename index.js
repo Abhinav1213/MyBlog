@@ -54,6 +54,25 @@ const apiLimiter = rateLimit({
     });
   },
 });
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  message: {
+    status: 429,
+    error: "Too many requests",
+    message: "Please try again later",
+  },
+  skip: (req) => {
+    return req.ip === "127.0.0.1";
+  },
+  handler: (req, res) => {
+    res.status(429).json({
+      error: "Rate Limit Exceeded!",
+      details: "You have made too many requests",
+    });
+  },
+});
 app.use(apiLimiter);
 
 app.get("/", (req, res) => {
