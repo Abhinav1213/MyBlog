@@ -1,6 +1,6 @@
 import express from 'express';
 import { db_connect } from '../db/db_connect.js';
-import {authentication} from '../utils/utils1.js'
+import {authentication} from '../utils/user_authentication.js'
 
 const router=express.Router();
 

@@ -2,7 +2,7 @@ import express from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { db_connect } from "../db/db_connect.js";
-import { authentication } from "../utils/utils1.js";
+import { authentication } from "../utils/user_authentication.js";
 import { signUpSchema, loginSchema } from "../validation/auth.js";
 import { bearerSchema } from "../validation/header.js";
 import { validate } from "../utils/input_validation.js";
