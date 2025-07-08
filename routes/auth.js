@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { db_connect } from '../db/db_connect.js'
 import { authentication } from '../utils/utils1.js'
-import { signUpSchema } from '../validation/auth.js'
+import { signUpSchema, loginSchema } from '../validation/auth.js'
 import { validate } from '../utils/input_validation.js'
 
 const router=express.Router();
@@ -44,32 +44,54 @@ router.post("/signUp", validate(signUpSchema), async (req, res) => {
   }
 });
 
-router.post('/login',async(req,res)=>{
-    const {email,password}=req.body;
-    // console.log(process.env.JWT_SECRET);
-    try{
-        const [row_password]=await db_connect.execute('select * from user where email=?',
-            [email]
-        )
-        console.log(row_password);
-        if(row_password.length===0){
-            return res.json({message:'Email not exist signUp first.'});
-        }
-        const user=row_password[0]
-        const ismatch=await bcrypt.compare(password,row_password[0].password)
-        
-        if(ismatch){
-            const token=jwt.sign({
-                email:user.email, username:user.username
-            },process.env.JWT_SECRET,{expiresIn:'1h'})
-            return res.status(201).json({message:"Login Successful",token})
-        }
-        return res.json({message:"Invalid credentials"})
-    }catch(err){
-        console.log("Error in Login", err);
-        res.status(500).json({message:"server error"});
+router.post("/login", validate(loginSchema), async (req, res) => {
+  const { email, password } = req.body;
+  if (!process.env.JWT_SECRET) {
+    console.log("JWT SECRET not configured!");
+    return res.status(400).json({ message: "Internal Failure" });
+  }
+  try {
+    const [rows] = await db_connect.execute(
+      "select * from user where email=?",
+      [email]
+    );
+    if (rows.length === 0) {
+      throw new Error("Invalid Credentials");
     }
-})
+
+    const is_password_valid = await bcrypt.compare(password, rows[0].password);
+    if (!is_password_valid) {
+      throw new Error("Invalid Credentials");
+    }
+
+    const token = jwt.sign(
+      {
+        email: rows[0].email,
+        username: rows[0].username,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+    return res.status(200).json({
+      message: "Login Successful!",
+      token,
+      user: { username: rows[0].username, email: rows[0].email },
+    });
+  } catch (err) {
+    console.log("Error in Login", err);
+
+    if (err.message === "Invalid Credentials") {
+      return res
+        .status(401)
+        .json({ message: "User not found! Please verify the credentials." });
+    }
+
+    return res.status(500).json({
+      message: "Server Error",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
+  }
+});
 
 router.delete('/deleteAccount', authentication, async(req,res)=>{
     const {email}=req.user;
