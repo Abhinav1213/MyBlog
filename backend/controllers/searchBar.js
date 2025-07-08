@@ -1,7 +1,7 @@
 import { db_connect } from "../db/db_connect.js";
 
 export const allUsers=async(req,res)=>{
-    console.log("1234");
+    // console.log("1234");
     
     try{
         const [rows]= await db_connect.execute('select username from user')

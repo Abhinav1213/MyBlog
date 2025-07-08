@@ -6,6 +6,7 @@ import { User, Mail, Users, Shield } from "lucide-react";
 const UserProfile = () => {
     const { name } = useParams();
     const [user, setUser] = useState(null);
+    const [posts, setPosts] = useState([])
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -17,19 +18,37 @@ const UserProfile = () => {
                     }
                 });
                 const data = await res.json();
-                if (data.message && Array.isArray(data.message) && data.message.length > 0) {
-                    data.message[0].photo = 'https://media.licdn.com/dms/image/v2/D5603AQHwZZJxxkeVmg/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1725872588768?e=1757548800&v=beta&t=qjNtntg3kfRnplhm-xC_bQ7ZkuUxZnD16lc0su4o1ig';
-                    setUser(data.message[0]);
-                    console.log(data.message[0]);
-                    
+                // console.log( data.row.length );
+
+                if (data.row && data.row.length > 0) {
+                    data.row[0].photo = 'https://media.licdn.com/dms/image/v2/D5603AQHwZZJxxkeVmg/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1725872588768?e=1757548800&v=beta&t=qjNtntg3kfRnplhm-xC_bQ7ZkuUxZnD16lc0su4o1ig';
+                    setUser(data.row[0]);
+                    // console.log(data.row[0]);
                 } else {
                     setUser(null);
                 }
+                return;
             } catch (err) {
                 console.error("Failed to fetch user:", err);
             }
         };
+        const fetchPosts = async () => {
+            try {
+                const response = await fetch(`http://localhost:8080/user/post/${name}`, {
+                    method: "GET",
+                    headers: {
+                        'content-type': 'application/json'
+                    }
+                })
+                const data = await response.json();
+                console.log(data.rows);
+                setPosts(data.rows)
+            } catch (err) {
+                console.error("failed to fetch user Post", err);
+            }
+        }
         fetchUser();
+        fetchPosts();
     }, [name]);
 
     return (
@@ -67,6 +86,60 @@ const UserProfile = () => {
                     <div className="text-center text-blue-700 text-xl font-semibold animate-pulse">
                         Loading...
                     </div>
+                )}
+            </div>
+            {/* User's Posts Section */}
+            <div className="max-w-2xl mx-auto mt-8 w-full">
+                <h3 className="text-2xl font-bold text-blue-700 mb-4 flex items-center gap-2">
+                    <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 21H5a2 2 0 01-2-2V7a2 2 0 012-2h4l2-2 2 2h4a2 2 0 012 2v12a2 2 0 01-2 2z" /></svg>
+                    Posts
+                </h3>
+                {posts && posts.length > 0 ? (
+                    posts.map((post, idx) => (
+                        <div
+                            key={idx}
+                            className="bg-white rounded-xl shadow-md mb-6 p-6 border border-blue-100 hover:shadow-lg transition"
+                        >
+                            <div className="flex items-center justify-between mb-2">
+                                <h4 className="text-xl font-semibold text-blue-800 flex items-center gap-2">
+                                    <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 20h9" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m0 0H3" /></svg>
+                                    {post.title}
+                                </h4>
+                                <span className="text-xs text-gray-400">{new Date(post.date).toLocaleDateString()}</span>
+                            </div>
+                            <p className="text-gray-700 mb-4">{post.description}</p>
+                            <div className="flex items-center gap-6 mb-2">
+                                <span className="flex items-center gap-1 text-green-600 font-semibold">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14 9l-3 3m0 0l-3-3m3 3V4m0 16v-7" /></svg>
+                                    {post.likes}
+                                </span>
+                                <span className="flex items-center gap-1 text-red-500 font-semibold">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 15l3-3m0 0l3 3m-3-3v7m0-16v7" /></svg>
+                                    {post.dislikes}
+                                </span>
+                            </div>
+                            {/* Comments */}
+                            {/* <div className="mt-4">
+                                <h5 className="font-bold text-blue-600 mb-2 flex items-center gap-1">
+                                    <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 8h2a2 2 0 012 2v8a2 2 0 01-2 2H7a2 2 0 01-2-2v-2" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 3h6v6" /><path strokeLinecap="round" strokeLinejoin="round" d="M10 14l2-2 4 4" /></svg>
+                                    Comments
+                                </h5>
+                                {post.comments && post.comments.length > 0 ? (
+                                    <ul className="pl-4 space-y-1">
+                                        {post.comments.map((comment, cidx) => (
+                                            <li key={cidx} className="text-gray-600 text-sm bg-blue-50 rounded px-2 py-1">
+                                                {comment}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <span className="text-gray-400 text-sm">No comments yet.</span>
+                                )}
+                            </div> */}
+                        </div>
+                    ))
+                ) : (
+                    <div className="text-center text-blue-500 font-semibold">No posts yet.</div>
                 )}
             </div>
         </div>
