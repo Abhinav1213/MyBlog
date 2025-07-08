@@ -4,7 +4,41 @@ import { db_connect } from '../db/db_connect.js'
 import jwt from 'jsonwebtoken'
 import { authentication } from '../utils/utils1.js'
 
-const router=express.Router()
+const router=express.Router();
+
+router.post("/signUp", async (req, res) => {
+  const { email, password, username } = req.body;
+  if (!process.env.JWT_SECRET) {
+    console.log("JWT SECRET not configured!");
+    return res.status(400).json({ message: "Internal Failure"});
+  }
+  try {
+    const saltRounds = 10;
+    const hash_password = await bcrypt.hash(password, saltRounds);
+
+    await db_connect.execute(
+      "INSERT into user (username,email,password) values (?,?,?)",
+      [username, email, hash_password]
+    );
+
+    const token = jwt.sign({ email: email, username }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    return res.status(201).json({ message: "User Created", token, user: { username, email } });
+  } catch (err) {
+
+    if (err.code === 'ER_DUP_ENTRY') {
+      const field = err.sqlMessage.includes('email')? 'Email': 'Username';
+      return res.status(400).json({ message: `${field} already exists` });
+    }
+    console.log("Error in signUp", err);
+    res.status(500).json({ 
+      message: "Server Error", error: err.message,
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
+     });
+  }
+});
 
 router.post('/login',async(req,res)=>{
     const {email,password}=req.body;
@@ -30,29 +64,6 @@ router.post('/login',async(req,res)=>{
     }catch(err){
         console.log("Error in Login", err);
         res.status(500).json({message:"server error"});
-    }
-})
-
-router.post('/signUp',async(req,res)=>{
-    const{email,password,username}=req.body;
-    // console.log(req.body);
-    try{
-        const [rows]=await db_connect.execute('select * from user where email=?',
-            [email])
-        if(rows.length===0){
-            //new user:
-            const saltRounds=10;
-            const new_password=await bcrypt.hash(password, saltRounds);;
-            await db_connect.execute('INSERT into user (username,email,password) values (?,?,?)',
-                [username, email, new_password]
-            )
-            const token=jwt.sign({email:email, username},process.env.JWT_SECRET,{expiresIn:'1h'})
-            return res.status(201).json({message:'User Created', token});
-        }
-        return res.json({message:"This email already exists."})
-    }catch(err){
-        console.log("Error in signUp", err);
-        res.status(500).json({message:"Server Error"});
     }
 })
 
