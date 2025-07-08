@@ -1,16 +1,18 @@
 import express from 'express'
 import bcrypt from 'bcrypt'
-import { db_connect } from '../db/db_connect.js'
 import jwt from 'jsonwebtoken'
+import { db_connect } from '../db/db_connect.js'
 import { authentication } from '../utils/utils1.js'
+import { signUpSchema } from '../validation/auth.js'
+import { validate } from '../utils/input_validation.js'
 
 const router=express.Router();
 
-router.post("/signUp", async (req, res) => {
+router.post("/signUp", validate(signUpSchema), async (req, res) => {
   const { email, password, username } = req.body;
   if (!process.env.JWT_SECRET) {
     console.log("JWT SECRET not configured!");
-    return res.status(400).json({ message: "Internal Failure"});
+    return res.status(400).json({ message: "Internal Failure" });
   }
   try {
     const saltRounds = 10;
@@ -25,18 +27,20 @@ router.post("/signUp", async (req, res) => {
       expiresIn: "1h",
     });
 
-    return res.status(201).json({ message: "User Created", token, user: { username, email } });
+    return res
+      .status(201)
+      .json({ message: "User Created", token, user: { username, email } });
   } catch (err) {
-
-    if (err.code === 'ER_DUP_ENTRY') {
-      const field = err.sqlMessage.includes('email')? 'Email': 'Username';
+    if (err.code === "ER_DUP_ENTRY") {
+      const field = err.sqlMessage.includes("email") ? "Email" : "Username";
       return res.status(400).json({ message: `${field} already exists` });
     }
     console.log("Error in signUp", err);
-    res.status(500).json({ 
-      message: "Server Error", error: err.message,
+    return res.status(500).json({
+      message: "Server Error",
+      error: err.message,
       error: process.env.NODE_ENV === "development" ? err.message : undefined,
-     });
+    });
   }
 });
 
