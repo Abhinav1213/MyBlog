@@ -4,10 +4,12 @@ export const sendPostSchema = z.object({
   title: z
     .string()
     .min(3)
-    .max(100)
-    .transform((val) => sanitizeHtml(val)),
+    .max(100),
   des: z
     .string()
-    .optional()
-    .transform((val) => (val ? sanitizeHtml(val) : undefined)),
+    .optional(),
 });
+
+export const deletePostsParamsSchema = z.object({
+  id: z.string().regex(/^\d+$/, "ID must be a positive integer"),
+})
