@@ -1,12 +1,17 @@
 import { z } from "zod";
+import {
+  user_email_schema,
+  user_password_schema,
+  user_username_schema,
+} from "../schema/property_schema_for_validation.js";
 
 export const signUpSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-  username: z.string().min(3),
+  email: user_email_schema,
+  password: user_password_schema,
+  username: user_username_schema,
 });
 
 export const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6)
+  email: user_email_schema,
+  password: user_password_schema,
 });
