@@ -18,8 +18,8 @@
 
 **Responses:**
 
-- `201` -  User Created Successfully
-- `400` -  User Already Exists
+- `201` - User Created Successfully
+- `400` - User Already Exists
 - `500` - Server Error
 
 ---
@@ -85,6 +85,8 @@
 - `201` - Post Created
 - `500` - Server Error
 
+---
+
 ### GET `/blogs/allBlogs`
 
 **Get all blogs**
@@ -93,6 +95,8 @@
 
 - `200` - All Blogs
 - `500` - Error Fetching Posts
+
+---
 
 ### GET `/blogs?query`
 
@@ -108,6 +112,8 @@
 - `200` - All matching posts
 - `400` - No query provided
 - `500` - Error Fetching Posts
+
+---
 
 ### PUT `/blogs/updateBlog/:id`
 
@@ -137,6 +143,8 @@
 - `403` - Post does not belong to the author
 - `500` - Error Updating Post
 
+---
+
 ### DELETE `/blogs/deleteBlog/:id`
 
 **Delete Blog Post**
@@ -155,3 +163,5 @@
 - `404` - Post does not exist
 - `403` - Post does not belong to the author
 - `500` - Error Deleting Post
+
+---
