@@ -1,7 +1,9 @@
 import { useState } from "react";
 import {Link, useNavigate} from 'react-router-dom'
+import { useAuth } from "../context/authContext";
 
 const Signin = () => {
+    const {setLoginCred}=useAuth();
     const [form, setForm] = useState({
         username: "",
         email: "",
@@ -25,7 +27,8 @@ const Signin = () => {
                 })
             })
             // console.log(response);
-            if(response.status===201){
+            if(response.status===200){
+                setLoginCred({username: data.user.username, email: data.user.email, token:data.token})
                 navigate("/")
             }
         } catch (err) {

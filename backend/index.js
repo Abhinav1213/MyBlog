@@ -65,10 +65,6 @@ app.get("/", (req, res) => {
   });
 });
 
-app.use("/get", GettingPosts);
-app.use("/post", PostingPosts);
-app.use("/auth", authProcess);
-
 app.use((req, res) => {
   res.status(404).json({
     message: "Route not found!",

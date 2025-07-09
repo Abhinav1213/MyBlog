@@ -1,8 +1,10 @@
 import {Link,useNavigate} from 'react-router-dom'
 import { useState } from "react";
+import {useAuth} from '../context/authContext'
 
 const Login = () => {
     const [authData, setAuthData]=useState({email:"",password:""});
+    const {setLoginCred}=useAuth()
     const navigate=useNavigate();
 
     const checkLogin=async(e)=>{
@@ -18,7 +20,11 @@ const Login = () => {
                     password:authData.password
                 })
             })
+            const data=await response.json()
+            // console.log(data.user.username);
+            
             if(response.status===200){
+                setLoginCred({username: data.user.username, email: data.user.email, token:data.token})
                 navigate("/")
             }
             console.log(response.status);

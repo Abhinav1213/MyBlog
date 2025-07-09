@@ -48,20 +48,20 @@ router.get('/post/:username', async(req,res)=>{
     }
 })
 //security required:--
-router.put('/post/:postId',authentication,async(req,res)=>{
-    const {postId}=req.params;
-    const {title, description}=req.body;
-    try{
-        const [result]=await db_connect.execute(`UPDATE posts SET title=?, description=? WHERE id=?`,
-            [title, description, postId]
-         )
-        if(result.affectedRows===0){
-            return res.status(404).json({ message: "Post not found" });
-        }
-        res.status(201).json({message:"Post updated successfully."})
-    }
-    catch(err){
-        console.log("Error in /post/:postId", err);
-    }
-})
+// router.put('/post/:postId',authentication,async(req,res)=>{
+//     const {postId}=req.params;
+//     const {title, description}=req.body;
+//     try{
+//         const [result]=await db_connect.execute(`UPDATE posts SET title=?, description=? WHERE id=?`,
+//             [title, description, postId]
+//          )
+//         if(result.affectedRows===0){
+//             return res.status(404).json({ message: "Post not found" });
+//         }
+//         res.status(201).json({message:"Post updated successfully."})
+//     }
+//     catch(err){
+//         console.log("Error in /post/:postId", err);
+//     }
+// })
 export default router;

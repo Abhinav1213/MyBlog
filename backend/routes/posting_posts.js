@@ -1,8 +1,9 @@
 import express from 'express'
 const router = express.Router();
 import { db_connect } from '../db/db_connect.js';
+import { authentication } from '../utils/user_authentication.js';
 
-router.post('/postBlog', async(req,res)=>{
+router.post('/postBlog',authentication, async(req,res)=>{
     const {title, des, author}=req.body;
     try{
         await db_connect.execute

@@ -2,11 +2,15 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { User, Mail, Users, Shield } from "lucide-react";
+import { useAuth } from "../context/authContext";
+import PostModal from "../components/PostModal";
 
 const UserProfile = () => {
     const { name } = useParams();
     const [user, setUser] = useState(null);
     const [posts, setPosts] = useState([])
+    const [close, setClose] = useState(false)
+    const { loginCred } = useAuth()
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -21,7 +25,7 @@ const UserProfile = () => {
                 // console.log( data.row.length );
 
                 if (data.row && data.row.length > 0) {
-                    data.row[0].photo = 'https://media.licdn.com/dms/image/v2/D5603AQHwZZJxxkeVmg/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1725872588768?e=1757548800&v=beta&t=qjNtntg3kfRnplhm-xC_bQ7ZkuUxZnD16lc0su4o1ig';
+                    data.row[0].photo = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS2IYhSn8Y9S9_HF3tVaYOepJBcrYcd809pBA&s';
                     setUser(data.row[0]);
                     // console.log(data.row[0]);
                 } else {
@@ -50,7 +54,10 @@ const UserProfile = () => {
         fetchUser();
         fetchPosts();
     }, [name]);
-
+    const newPost = () => {
+        // console.log("helo");
+        setClose(true)
+    }
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-200">
             <Navbar />
@@ -74,13 +81,21 @@ const UserProfile = () => {
                             <Users className="w-5 h-5 text-blue-400" />
                             <span className="font-medium">{user.followers} Followers</span>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-600 mb-6">
-                            <Shield className="w-5 h-5 text-blue-400" />
-                            <span className="font-medium">User ID: {user.id}</span>
-                        </div>
-                        <button className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-full font-semibold shadow hover:bg-blue-700 transition">
+                        {loginCred.username !== name && (<button className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-full font-semibold shadow hover:bg-blue-700 transition">
                             Follow
-                        </button>
+                        </button>)}
+                        {/* create a button for "create post"  */}
+                        {loginCred.username === name && (
+                            <button
+                                onClick={newPost}
+                                className="flex items-center gap-2 px-6 py-2 mb-4 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-full font-semibold shadow-lg hover:scale-105 hover:from-blue-600 hover:to-blue-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                                </svg>
+                                New Post
+                            </button>
+                        )}
                     </div>
                 ) : (
                     <div className="text-center text-blue-700 text-xl font-semibold animate-pulse">
@@ -88,6 +103,7 @@ const UserProfile = () => {
                     </div>
                 )}
             </div>
+
             {/* User's Posts Section */}
             <div className="max-w-2xl mx-auto mt-8 w-full">
                 <h3 className="text-2xl font-bold text-blue-700 mb-4 flex items-center gap-2">
@@ -142,6 +158,7 @@ const UserProfile = () => {
                     <div className="text-center text-blue-500 font-semibold">No posts yet.</div>
                 )}
             </div>
+            {close && (<PostModal setClose={setClose} />)}
         </div>
     );
 };
