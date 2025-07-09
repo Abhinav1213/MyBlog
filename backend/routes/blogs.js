@@ -84,10 +84,8 @@ router.get(
       }
 
       const [rows] = await db_connect.execute(query, params);
-      return res.status(201).json(rows);
+      return res.status(200).json(rows);
     } catch (err) {
-      if (err.code === "QUERY_VALIDATION_FAILED") {
-      }
       console.log("Error Fetching Blogs", err);
       if (err.code === "NO_QUERY_PROVIDED") {
         return res
@@ -143,7 +141,7 @@ router.put(
         return res.status(403).json({ message: err.message });
       }
       return res.status(500).json({
-        message: "Error Deleting Post",
+        message: "Error Updating Post",
         error: process.env.NODE_ENV === "development" ? err.message : undefined,
       });
     }
