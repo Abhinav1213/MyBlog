@@ -12,7 +12,10 @@ export const user_username_schema = z
   .string()
   .min(3)
   .max(50)
-  .regex(/^[^\s]+$/, "Username can only contain alphanumerals, . and -");
+  .regex(
+    /^[a-zA-Z0-9.-]+$/,
+    "Username can only contain alphanumerals, . and -"
+  );
 
 export const posts_id_schema = z
   .string()
