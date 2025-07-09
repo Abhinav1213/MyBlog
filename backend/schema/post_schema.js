@@ -3,10 +3,11 @@ CREATE TABLE IF NOT EXISTS posts (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    author VARCHAR(100) NOT NULL,
+    author VARCHAR(50) NOT NULL,
     likes INT default 0,
     dislikes INT default 0,
-    description TEXT
+    description TEXT default NULL,
+    FOREIGN KEY (author) REFERENCES user(username)
 );
 `;
 
