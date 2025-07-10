@@ -8,6 +8,7 @@ export const send_fr_userid_schema = z.object({
   user_id: user_id_schema,
 });
 
-export const handle_fr_requestid_schema = z.object({
+export const update_fr_schema = z.object({
+  action: z.enum(["accept", "reject"]),
   request_id: fr_req_id_schema,
-});
+}).strict();

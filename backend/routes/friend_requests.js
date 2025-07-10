@@ -5,7 +5,7 @@ import { validate } from "../utils/input_validation.js";
 import { bearerSchema } from "../validation/header.js";
 import {
   send_fr_userid_schema,
-  handle_fr_requestid_schema,
+  update_fr_schema
 } from "../validation/fr.js";
 
 const router = express.Router();
@@ -66,12 +66,13 @@ router.post(
 );
 
 router.put(
-  "/accept/:request_id",
-  validate({ params: handle_fr_requestid_schema, headers: bearerSchema }),
+  "/",
+  validate({ query: update_fr_schema, headers: bearerSchema }),
   authentication,
   async (req, res) => {
-    const request_id = req.params.request_id;
+    const {action, request_id} = req.query;
     const user_id = req.user.id;
+
     try {
       const [rows] = await db_connect.execute(
         "select * from friend_request where request_id=?",
@@ -90,18 +91,26 @@ router.put(
         throw err;
       }
 
-      if (rows[0].status === "accepted") {
+      if (rows[0].status === "accepted" && action === "accept") {
         const err = new Error("Request already accepted");
         err.code = "DEALT_WITH";
         throw err;
       }
 
+      if (rows[0].status === "rejected" && action === "reject") {
+        const err = new Error("Request already rejected");
+        err.code = "DEALT_WITH";
+        throw err;
+      }
+      console.log("before query execution");
+      console.log(`${action}ed`);
       await db_connect.execute(
-        "UPDATE friend_request SET status='accepted' where request_id=?",
-        [request_id]
+        "UPDATE friend_request SET status=? where request_id=?",
+        [`${action}ed`,request_id]
       );
+      console.log("after query execution");
       
-      return res.status(200).json({ message: "Request accepted" });
+      return res.status(200).json({ message: `Request ${action}ed` });
     } catch (err) {
       console.log("Error Accepting Request", err);
 
