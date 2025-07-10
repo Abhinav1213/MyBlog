@@ -3,7 +3,11 @@ import { db_connect } from "../db/db_connect.js";
 import { authentication } from "../utils/user_authentication.js";
 import { validate } from "../utils/input_validation.js";
 import { bearerSchema } from "../validation/header.js";
-import { send_fr_userid_schema, update_fr_schema } from "../validation/fr.js";
+import {
+  send_fr_userid_schema,
+  update_fr_schema,
+  get_fr_schema,
+} from "../validation/fr.js";
 
 const router = express.Router();
 
@@ -133,18 +137,31 @@ router.put(
 
 router.get(
   "/allRequests",
-  validate({ headers: bearerSchema }),
+  validate({ query: get_fr_schema, headers: bearerSchema }),
   authentication,
   async (req, res) => {
     const user_id = req.user.id;
+    const { action } = req.query;
     try {
-      const [rows] = await db_connect.execute(
-        "SELECT u.id, u.username FROM user u JOIN friend_request f ON (f.sender_id = u.id AND f.receiver_id = ?) WHERE f.status = 'pending'",
-        [user_id]
-      );
+      let query;
+      if (action === "sent") {
+        query =
+          "SELECT u.id, u.username FROM user u JOIN friend_request f ON (f.sender_id = ? AND f.receiver_id = u.id) WHERE f.status = 'pending'";
+      } else if (action === "received") {
+        query =
+          "SELECT u.id, u.username FROM user u JOIN friend_request f ON (f.sender_id = u.id AND f.receiver_id = ?) WHERE f.status = 'pending'";
+      } else {
+        const err = new Error("No query received");
+        err.code = "QUERY_ABSENT";
+        throw err;
+      }
+      const [rows] = await db_connect.execute(query, [user_id]);
       return res.status(200).json(rows);
     } catch (err) {
       console.log("Error Fetching Friends List", err);
+      if (err.code === "QUERY_ABSENT") {
+        return res.status(400).json({ message: err.message });
+      }
       return res.status(500).json({
         message: "Server Error",
         error: process.env.NODE_ENV === "development" ? err.message : undefined,

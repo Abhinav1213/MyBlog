@@ -12,3 +12,7 @@ export const update_fr_schema = z.object({
   action: z.enum(["accept", "reject"]),
   request_id: fr_req_id_schema,
 }).strict();
+
+export const get_fr_schema = z.object({
+  action: z.enum(["sent", "received"]),
+}).strict();
