@@ -4,7 +4,8 @@ import { authentication } from "../utils/user_authentication.js";
 import { validate } from "../utils/input_validation.js";
 import { bearerSchema } from "../validation/header.js";
 import {
-  send_fr_userid_schema,
+  // send_fr_userid_schema,
+  send_fr_username_schema,
   update_fr_schema,
   get_fr_schema,
 } from "../validation/friend_requests.js";
@@ -12,23 +13,26 @@ import {
 const router = express.Router();
 
 router.post(
-  "/:user_id",
-  validate({ params: send_fr_userid_schema, headers: bearerSchema }),
+  // "/:user_id",
+  // validate({ params: send_fr_userid_schema, headers: bearerSchema }),
+  "/:user_name",
+  validate({ params: send_fr_username_schema, headers: bearerSchema }),
   authentication,
   async (req, res) => {
-    const receiver_id = req.params.user_id;
-    const sender_id = req.user.id;
+    // const receiver_id = req.params.user_id;
+    const receiver_name = req.params.user_name;
+    const sender_name = req.user.username;
 
     try {
-      if (Number(receiver_id) === sender_id) {
+      if (receiver_name === sender_name) {
         const err = new Error("Cant Send Friend Request to yourself");
         err.code = "SENDER_RECEIVER_ARE_SAME";
         throw err;
       }
 
       const [rows] = await db_connect.execute(
-        "SELECT * FROM friend_request where (sender_id=? and receiver_id=?) or (sender_id=? and receiver_id=?)",
-        [sender_id, receiver_id, receiver_id, sender_id]
+        "SELECT * FROM friend_request where (sender_name=? and receiver_name=?) or (sender_name=? and receiver_name=?)",
+        [sender_name, receiver_name, receiver_name, sender_name]
       );
 
       if (rows.length !== 0) {
@@ -37,12 +41,19 @@ router.post(
         throw err;
       }
 
-      await db_connect.execute(
-        "INSERT INTO friend_request (sender_id, receiver_id) VALUES (?, ?)",
-        [sender_id, receiver_id]
+      const req_id = await db_connect.execute(
+        "INSERT INTO friend_request (sender_name, receiver_name) VALUES (?, ?)",
+        [sender_name, receiver_name]
       );
 
-      return res.status(201).json({ message: "Request Sent" });
+      return res.status(201).json({ 
+        message: "Request Sent" ,
+        request: {
+          id: req_id[0].insertId,
+          sender: sender_name,
+          receiver: receiver_name
+        }
+      });
     } catch (err) {
       console.log("Error Sending Friend Request", err);
 
@@ -67,7 +78,8 @@ router.put(
   authentication,
   async (req, res) => {
     const { action, request_id } = req.query;
-    const user_id = req.user.id;
+    // const user_id = req.user.id;
+    const receiver_name = req.user.username;
 
     try {
       const [rows] = await db_connect.execute(
@@ -81,7 +93,7 @@ router.put(
         throw err;
       }
 
-      if (rows[0].sender_id !== user_id) {
+      if (rows[0].receiver_name !== receiver_name) {
         const err = new Error("Request not meant for given user");
         err.code = "UNAUTHORISED";
         throw err;
@@ -98,13 +110,11 @@ router.put(
         err.code = "DEALT_WITH";
         throw err;
       }
-      console.log("before query execution");
       console.log(`${action}ed`);
       await db_connect.execute(
         "UPDATE friend_request SET status=? where request_id=?",
         [`${action}ed`, request_id]
       );
-      console.log("after query execution");
 
       return res.status(200).json({ message: `Request ${action}ed` });
     } catch (err) {
@@ -135,22 +145,23 @@ router.get(
   validate({ query: get_fr_schema, headers: bearerSchema }),
   authentication,
   async (req, res) => {
-    const user_id = req.user.id;
+    // const user_id = req.user.id;
+    const username = req.user.username;
     const { action } = req.query;
     try {
       let query;
       if (action === "sent") {
         query =
-          "SELECT u.id, u.username FROM user u JOIN friend_request f ON (f.sender_id = ? AND f.receiver_id = u.id) WHERE f.status = 'pending'";
+          "SELECT u.id AS user_id, u.username FROM user u JOIN friend_request f ON (f.sender_name = ? AND f.receiver_name = u.username) WHERE f.status = 'pending'";
       } else if (action === "received") {
         query =
-          "SELECT u.id, u.username FROM user u JOIN friend_request f ON (f.sender_id = u.id AND f.receiver_id = ?) WHERE f.status = 'pending'";
+          "SELECT u.id AS user_id, u.username FROM user u JOIN friend_request f ON (f.sender_name = u.username AND f.receiver_name = ?) WHERE f.status = 'pending'";
       } else {
         const err = new Error("No query received");
         err.code = "QUERY_ABSENT";
         throw err;
       }
-      const [rows] = await db_connect.execute(query, [user_id]);
+      const [rows] = await db_connect.execute(query, [username]);
       return res.status(200).json(rows);
     } catch (err) {
       console.log("Error Fetching Friends List", err);
@@ -170,11 +181,12 @@ router.get(
   validate({ headers: bearerSchema }),
   authentication,
   async (req, res) => {
-    const user_id = req.user.id;
+    // const user_id = req.user.id;
+    const username = req.user.username;
     try {
       const [rows] = await db_connect.execute(
-        "SELECT u.id, u.username FROM user u JOIN friend_request f ON ((f.sender_id = u.id AND f.receiver_id = ?) OR (f.sender_id = ? AND f.receiver_id = u.id)) WHERE f.status = 'accepted';",
-        [user_id, user_id]
+        "SELECT u.id, u.username FROM user u JOIN friend_request f ON ((f.sender_name = u.username AND f.receiver_name = ?) OR (f.sender_name = ? AND f.receiver_name = u.username)) WHERE f.status = 'accepted';",
+        [username, username]
       );
 
       return res.status(200).json(rows);
