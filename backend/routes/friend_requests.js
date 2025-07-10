@@ -132,6 +132,28 @@ router.put(
 );
 
 router.get(
+  "/allRequests",
+  validate({ headers: bearerSchema }),
+  authentication,
+  async (req, res) => {
+    const user_id = req.user.id;
+    try {
+      const [rows] = await db_connect.execute(
+        "SELECT u.id, u.username FROM user u JOIN friend_request f ON (f.sender_id = u.id AND f.receiver_id = ?) WHERE f.status = 'pending'",
+        [user_id]
+      );
+      return res.status(200).json(rows);
+    } catch (err) {
+      console.log("Error Fetching Friends List", err);
+      return res.status(500).json({
+        message: "Server Error",
+        error: process.env.NODE_ENV === "development" ? err.message : undefined,
+      });
+    }
+  }
+);
+
+router.get(
   "/",
   validate({ headers: bearerSchema }),
   authentication,
