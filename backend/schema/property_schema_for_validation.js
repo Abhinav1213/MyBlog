@@ -33,3 +33,7 @@ export const posts_date_schema = z
 export const posts_author_schema = user_username_schema;
 
 export const posts_description_schema = z.string().optional();
+
+export const fr_req_id_schema = z
+  .string()
+  .regex(/^\d+$/, "ID must be a positive integer");
