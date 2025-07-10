@@ -25,12 +25,12 @@ CREATE TABLE IF NOT EXISTS user(
 export const FRIEND_REQUEST=`
 CREATE TABLE IF NOT EXISTS friend_request(
     request_id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
-    sender_id INT NOT NULL,
-    receiver_id INT NOT NULL,
+    sender_name VARCHAR(50) NOT NULL,
+    receiver_name VARCHAR(50) NOT NULL,
     status ENUM('pending', 'accepted', 'rejected') DEFAULT 'pending',
     created_at TIMESTAMP default CURRENT_TIMESTAMP,
-    FOREIGN KEY (sender_id) REFERENCES user(id) ON DELETE CASCADE,
-    FOREIGN KEY (receiver_id) REFERENCES user(id) ON DELETE CASCADE
+    FOREIGN KEY (sender_name) REFERENCES user(username) ON DELETE CASCADE,
+    FOREIGN KEY (receiver_name) REFERENCES user(username) ON DELETE CASCADE
 )
 `
 export const COMMENTS=`
