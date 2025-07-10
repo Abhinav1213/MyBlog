@@ -3,17 +3,14 @@ import { db_connect } from "../db/db_connect.js";
 import { authentication } from "../utils/user_authentication.js";
 import { validate } from "../utils/input_validation.js";
 import { bearerSchema } from "../validation/header.js";
-import {
-  send_fr_userid_schema,
-  update_fr_schema
-} from "../validation/fr.js";
+import { send_fr_userid_schema, update_fr_schema } from "../validation/fr.js";
 
 const router = express.Router();
 
-router.get("/", async (req, res) => {
-  console.log("FR route reached");
-  return res.status(200).json({ message: "friend request route" });
-});
+// router.get("/", async (req, res) => {
+//   console.log("FR route reached");
+//   return res.status(200).json({ message: "friend request route" });
+// });
 
 router.post(
   "/:user_id",
@@ -70,7 +67,7 @@ router.put(
   validate({ query: update_fr_schema, headers: bearerSchema }),
   authentication,
   async (req, res) => {
-    const {action, request_id} = req.query;
+    const { action, request_id } = req.query;
     const user_id = req.user.id;
 
     try {
@@ -106,10 +103,10 @@ router.put(
       console.log(`${action}ed`);
       await db_connect.execute(
         "UPDATE friend_request SET status=? where request_id=?",
-        [`${action}ed`,request_id]
+        [`${action}ed`, request_id]
       );
       console.log("after query execution");
-      
+
       return res.status(200).json({ message: `Request ${action}ed` });
     } catch (err) {
       console.log("Error Accepting Request", err);
@@ -134,14 +131,27 @@ router.put(
   }
 );
 
-export default router;
+router.get(
+  "/",
+  validate({ headers: bearerSchema }),
+  authentication,
+  async (req, res) => {
+    const user_id = req.user.id;
+    try {
+      const [rows] = await db_connect.execute(
+        "SELECT u.id, u.username FROM user u JOIN friend_request f ON ((f.sender_id = u.id AND f.receiver_id = ?) OR (f.sender_id = ? AND f.receiver_id = u.id)) WHERE f.status = 'accepted';",
+        [user_id, user_id]
+      );
 
-// SELECT u.id, u.username
-// FROM users u
-// JOIN friend_requests f
-//   ON (
-//     (f.sender_id = u.id AND f.receiver_id = 5)
-//     OR
-//     (f.receiver_id = u.id AND f.sender_id = 5)
-//   )
-// WHERE f.status = 'accepted';
+      return res.status(200).json(rows);
+    } catch (err) {
+      console.log("Error Fetching Friends List", err);
+      return res.status(500).json({
+        message: "Server Error",
+        error: process.env.NODE_ENV === "development" ? err.message : undefined,
+      });
+    }
+  }
+);
+
+export default router;
