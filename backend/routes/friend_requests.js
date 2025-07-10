@@ -7,14 +7,9 @@ import {
   send_fr_userid_schema,
   update_fr_schema,
   get_fr_schema,
-} from "../validation/fr.js";
+} from "../validation/friend_requests.js";
 
 const router = express.Router();
-
-// router.get("/", async (req, res) => {
-//   console.log("FR route reached");
-//   return res.status(200).json({ message: "friend request route" });
-// });
 
 router.post(
   "/:user_id",
