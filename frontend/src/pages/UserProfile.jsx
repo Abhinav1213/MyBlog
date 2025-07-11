@@ -4,14 +4,20 @@ import Navbar from "../components/Navbar";
 import { User, Mail, Users, Shield } from "lucide-react";
 import { useAuth } from "../context/authContext";
 import PostModal from "../components/PostModal";
+import { useNavigate } from "react-router-dom";
 
 const UserProfile = () => {
     const { name } = useParams();
     const [user, setUser] = useState(null);
     const [posts, setPosts] = useState([])
     const [close, setClose] = useState(false)
-    const { loginCred } = useAuth()
-
+    const { loginCred,setLoginCred } = useAuth()
+    const navigate=useNavigate()
+    const handleLogout=()=>{
+        localStorage.removeItem('loginCred')
+        setLoginCred({ username: "", email: "", token: "" });
+        navigate("/login")
+    }
     useEffect(() => {
         const fetchUser = async () => {
             try {
@@ -55,8 +61,26 @@ const UserProfile = () => {
         fetchPosts();
     }, [name]);
     const newPost = () => {
-        // console.log("helo");
         setClose(true)
+    }
+    const sendFriendRequest = async () => {
+        console.log(name);
+        try {
+            console.log(loginCred.token);
+
+            const response = await fetch(`http://localhost:8080/fr/${name}`, {
+                method: "POST",
+                headers: {
+                    'content-type': "application/json",
+                    'authorization': `Bearer ${loginCred.token}`
+                }
+            })
+            const data = await response.json();
+            console.log(data);
+        } catch (err) {
+            console.log('Unable to send friend-request', err);
+        }
+
     }
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-200">
@@ -69,10 +93,13 @@ const UserProfile = () => {
                             alt={user.username}
                             className="w-32 h-32 rounded-full border-4 border-blue-400 shadow-lg mb-4 object-cover"
                         />
-                        <h2 className="text-3xl font-extrabold text-blue-700 flex items-center gap-2 mb-2">
-                            <User className="w-7 h-7 text-blue-500" />
-                            {user.username}
-                        </h2>
+                        <div className="flex justify-centre align-center">
+                            <h2 className="text-3xl font-extrabold text-blue-700 flex items-center gap-2 mb-2">
+                                <User className="w-7 h-7 text-blue-500" />
+                                {user.username}
+                            </h2>
+                            <button className="text-sm text-red-800 p-3 bg-red-200 rounded-lg hover:bg-red-400" onClick={handleLogout}>Logout</button>
+                        </div>
                         <div className="flex items-center gap-2 text-gray-600 mb-2">
                             <Mail className="w-5 h-5 text-blue-400" />
                             <span className="font-medium">{user.email}</span>
@@ -84,7 +111,6 @@ const UserProfile = () => {
                         {loginCred.username !== name && (<button className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-full font-semibold shadow hover:bg-blue-700 transition">
                             Follow
                         </button>)}
-                        {/* create a button for "create post"  */}
                         {loginCred.username === name && (
                             <button
                                 onClick={newPost}
@@ -96,6 +122,10 @@ const UserProfile = () => {
                                 New Post
                             </button>
                         )}
+                        {/* all-friend, followers and following and add_friends */}
+                        {loginCred.username !== name && (<div>
+                            <button className="bg-gray-400 p-3 rounded-lg mt-2" onClick={sendFriendRequest}>Add Friend</button>
+                        </div>)}
                     </div>
                 ) : (
                     <div className="text-center text-blue-700 text-xl font-semibold animate-pulse">
@@ -103,8 +133,6 @@ const UserProfile = () => {
                     </div>
                 )}
             </div>
-
-            {/* User's Posts Section */}
             <div className="max-w-2xl mx-auto mt-8 w-full">
                 <h3 className="text-2xl font-bold text-blue-700 mb-4 flex items-center gap-2">
                     <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 21H5a2 2 0 01-2-2V7a2 2 0 012-2h4l2-2 2 2h4a2 2 0 012 2v12a2 2 0 01-2 2z" /></svg>

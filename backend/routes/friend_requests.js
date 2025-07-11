@@ -77,7 +77,8 @@ router.put(
   validate({ query: update_fr_schema, headers: bearerSchema }),
   authentication,
   async (req, res) => {
-    const { action, request_id } = req.query;
+    const { action, request_id, sender } = req.query;
+    // console.log(sender)
     // const user_id = req.user.id;
     const receiver_name = req.user.username;
 
@@ -86,7 +87,8 @@ router.put(
         "select * from friend_request where request_id=?",
         [request_id]
       );
-
+      console.log(rows);
+      
       if (rows.length === 0) {
         const err = new Error("Request ID does not exist");
         err.code = "INVALID_REQUEST_ID";
@@ -115,6 +117,11 @@ router.put(
         "UPDATE friend_request SET status=? where request_id=?",
         [`${action}ed`, request_id]
       );
+      if(action==='accept'){
+        await db_connect.execute("Insert into friends (user1, user2) values(?,?)",
+          [receiver_name,sender]
+        )
+      }
 
       return res.status(200).json({ message: `Request ${action}ed` });
     } catch (err) {
@@ -152,16 +159,18 @@ router.get(
       let query;
       if (action === "sent") {
         query =
-          "SELECT u.id AS user_id, u.username FROM user u JOIN friend_request f ON (f.sender_name = ? AND f.receiver_name = u.username) WHERE f.status = 'pending'";
+          "SELECT request_id, email, username,created_at FROM user u JOIN friend_request f ON (f.sender_name = ? AND f.receiver_name = u.username) WHERE f.status = 'pending'";
       } else if (action === "received") {
         query =
-          "SELECT u.id AS user_id, u.username FROM user u JOIN friend_request f ON (f.sender_name = u.username AND f.receiver_name = ?) WHERE f.status = 'pending'";
+          "SELECT request_id, email, username,created_at FROM user u JOIN friend_request f ON (f.sender_name = u.username AND f.receiver_name = ?) WHERE f.status = 'pending'";
       } else {
         const err = new Error("No query received");
         err.code = "QUERY_ABSENT";
         throw err;
       }
       const [rows] = await db_connect.execute(query, [username]);
+      // console.log(rows);
+      
       return res.status(200).json(rows);
     } catch (err) {
       console.log("Error Fetching Friends List", err);

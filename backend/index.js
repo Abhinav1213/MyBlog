@@ -2,7 +2,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import compression from "compression";
 import express from 'express'
-import { CREATE_POSTS_TABLE, USER_TABLE, FRIEND_REQUEST } from './schema/post_schema.js'
+import { CREATE_POSTS_TABLE, USER_TABLE, FRIEND_REQUEST, FRIEND } from './schema/post_schema.js'
 import dotenv from 'dotenv'
 import cors from 'cors'
 import {db_connect } from './db/db_connect.js'
@@ -21,6 +21,7 @@ try {
   await db_connect.execute(CREATE_POSTS_TABLE);
   await db_connect.execute(USER_TABLE);
   await db_connect.execute(FRIEND_REQUEST);
+  await db_connect.execute(FRIEND)
   console.log("Posts table created successfully");
 } catch (err) {
   console.error("Error creating posts table:", err);
