@@ -26,8 +26,7 @@ const Signin = () => {
                     username: form.username,
                 })
             })
-            // console.log(response);
-            if(response.status===200){
+            if(response.ok){
                 setLoginCred({username: data.user.username, email: data.user.email, token:data.token})
                 navigate("/")
             }
