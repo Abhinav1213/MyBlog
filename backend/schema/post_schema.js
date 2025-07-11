@@ -21,6 +21,18 @@ CREATE TABLE IF NOT EXISTS user(
     followers INT DEFAULT 0
 )
 `
+
+export const FRIEND_REQUEST=`
+CREATE TABLE IF NOT EXISTS friend_request(
+    request_id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
+    sender_name VARCHAR(50) NOT NULL,
+    receiver_name VARCHAR(50) NOT NULL,
+    status ENUM('pending', 'accepted', 'rejected') DEFAULT 'pending',
+    created_at TIMESTAMP default CURRENT_TIMESTAMP,
+    FOREIGN KEY (sender_name) REFERENCES user(username) ON DELETE CASCADE,
+    FOREIGN KEY (receiver_name) REFERENCES user(username) ON DELETE CASCADE
+)
+`
 export const COMMENTS=`
 CREATE TABLE IF NOT EXISTS comments(
     post_id INT NOT NULL,
@@ -42,15 +54,7 @@ CREATE TABLE IF NOT EXISTS dislikes(
     count ENUM(0,1)
 )
 `
-export const FRIEND_REQUEST=`
-CREATE TABLE IF NOT EXISTS friend_request(
-    request_id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
-    sender VARCHAR(50) NOT NULL,
-    receiver VARCHAR(50) NOT NULL,
-    status ENUM(1,0),
-    created_at TIMESTAMP default CURRENT_TIMESTAMP           
-)
-`
+
 export const FRIEND=`
 CREATE TABLE IF NOT EXISTS friends(
     request_id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
