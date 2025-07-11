@@ -165,3 +165,122 @@
 - `500` - Error Deleting Post
 
 ---
+
+## Friend Request API
+
+### POST `/fr/:username`
+
+**Send Friend Request to another username**
+
+**Header:**
+
+- Bearer: Token
+
+**Parameters:**
+
+- `username` - usernae of friend request receiver user
+
+**Responses:**
+
+- `201` - Request Sent
+
+```json
+{
+  message: "Request Sent" ,
+  request: {
+    id: <request_id>,
+    sender: sender_name,
+    receiver: receiver_name
+  }
+}
+```
+
+- `403` - Sender and Receiver are same
+- `403` - Friend Request already exists
+- `500` - Error Updating Post
+
+---
+
+### PUT `/fr/`
+
+**Accept or Reject Friend Request**
+
+**Header:**
+
+- Bearer: Token
+
+**Query:**
+
+| query        | value            | function                         |
+| ------------ | ---------------- | -------------------------------- |
+| `action`     | `accept`         | accept friend request            |
+|              | `reject`         | reject friend request            |
+| `request_id` | positive integer | request id of the friend request |
+
+**Responses:**
+
+- `200` - Request Updated
+- `400` - Invalid Request ID
+- `403` - Request not meant for user
+- `400` - Request already taken care of (request no longer pending)
+- `500` - Error Updating Post
+
+---
+
+### GET `/fr/allRequests`
+
+**Update Blog Post**
+
+**Header:**
+
+- Bearer: Token
+
+**Query:**
+
+| query    | value      | function                             | <id / username> in response |
+| -------- | ---------- | ------------------------------------ | --------------------------- |
+| `action` | `sent`     | friend requests sent by the user     | receiver                    |
+|          | `received` | friend requests received by the user | sender                      |
+
+**Responses:**
+
+- `200`
+
+```json
+[
+  {
+    "user_id": <user_id of (sender / request_receiver>,
+    "username": <username of sender / request_receiver>
+  }
+]
+```
+
+- `400` - No query received
+- `500` - Server Error
+
+---
+
+### GET `/fr/`
+
+**Get all friends list**
+
+**Header:**
+
+- Bearer: Token
+
+**Responses:**
+
+- `200`
+
+```json
+[
+  {
+    "user_id": <user_id of friend>,
+    "username": <username of friend>
+  }
+]
+```
+
+- `500` - Server Error
+
+---
