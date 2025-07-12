@@ -5,19 +5,23 @@ import { User, Mail, Users, Shield } from "lucide-react";
 import { useAuth } from "../context/authContext";
 import PostModal from "../components/PostModal";
 import { useNavigate } from "react-router-dom";
+import Comments from "../components/Comments";
 
 const UserProfile = () => {
     const { name } = useParams();
     const [user, setUser] = useState(null);
     const [posts, setPosts] = useState([])
     const [close, setClose] = useState(false)
-    const { loginCred,setLoginCred } = useAuth()
-    const navigate=useNavigate()
-    const handleLogout=()=>{
+    const { loginCred, setLoginCred } = useAuth()
+    const [comment_postId, setComment_postId] = useState({})
+    const navigate = useNavigate()
+
+    const handleLogout = () => {
         localStorage.removeItem('loginCred')
         setLoginCred({ username: "", email: "", token: "" });
         navigate("/login")
     }
+
     useEffect(() => {
         const fetchUser = async () => {
             try {
@@ -51,8 +55,14 @@ const UserProfile = () => {
                     }
                 })
                 const data = await response.json();
-                console.log(data.rows);
+                // console.log(data.rows);
                 setPosts(data.rows)
+                const statusMap = {};
+                data.rows.forEach(post => {
+                    statusMap[post.id] = false;
+                });
+                // console.log(statusMap);
+                setComment_postId(statusMap);
             } catch (err) {
                 console.error("failed to fetch user Post", err);
             }
@@ -60,9 +70,19 @@ const UserProfile = () => {
         fetchUser();
         fetchPosts();
     }, [name]);
+
+    const openComment = (post_id) => {
+        
+        setComment_postId(prev => ({
+            ...prev,
+            [post_id]: !comment_postId[post_id]
+        }));
+    };
+
     const newPost = () => {
         setClose(true)
     }
+
     const sendFriendRequest = async () => {
         console.log(name);
         try {
@@ -98,19 +118,16 @@ const UserProfile = () => {
                                 <User className="w-7 h-7 text-blue-500" />
                                 {user.username}
                             </h2>
-                            <button className="text-sm text-red-800 p-3 bg-red-200 rounded-lg hover:bg-red-400" onClick={handleLogout}>Logout</button>
                         </div>
+
                         <div className="flex items-center gap-2 text-gray-600 mb-2">
                             <Mail className="w-5 h-5 text-blue-400" />
                             <span className="font-medium">{user.email}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-600 mb-2">
+                        {/* <div className="flex items-center gap-2 text-gray-600 mb-2">
                             <Users className="w-5 h-5 text-blue-400" />
                             <span className="font-medium">{user.followers} Followers</span>
-                        </div>
-                        {loginCred.username !== name && (<button className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-full font-semibold shadow hover:bg-blue-700 transition">
-                            Follow
-                        </button>)}
+                        </div> */}
                         {loginCred.username === name && (
                             <button
                                 onClick={newPost}
@@ -122,6 +139,12 @@ const UserProfile = () => {
                                 New Post
                             </button>
                         )}
+                        <button
+                            className=" text-sm text-red-800 px-4 py-2 bg-red-200 rounded-lg hover:bg-red-400 transition font-semibold shadow"
+                            onClick={handleLogout}
+                        >
+                            Logout
+                        </button>
                         {/* all-friend, followers and following and add_friends */}
                         {loginCred.username !== name && (<div>
                             <button className="bg-gray-400 p-3 rounded-lg mt-2" onClick={sendFriendRequest}>Add Friend</button>
@@ -161,25 +184,12 @@ const UserProfile = () => {
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 15l3-3m0 0l3 3m-3-3v7m0-16v7" /></svg>
                                     {post.dislikes}
                                 </span>
-                            </div>
-                            {/* Comments */}
-                            {/* <div className="mt-4">
-                                <h5 className="font-bold text-blue-600 mb-2 flex items-center gap-1">
+                                <h5 className="font-bold text-blue-600 mb-2 flex items-center gap-1" onClick={() => openComment(post.id)}>
                                     <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 8h2a2 2 0 012 2v8a2 2 0 01-2 2H7a2 2 0 01-2-2v-2" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 3h6v6" /><path strokeLinecap="round" strokeLinejoin="round" d="M10 14l2-2 4 4" /></svg>
                                     Comments
                                 </h5>
-                                {post.comments && post.comments.length > 0 ? (
-                                    <ul className="pl-4 space-y-1">
-                                        {post.comments.map((comment, cidx) => (
-                                            <li key={cidx} className="text-gray-600 text-sm bg-blue-50 rounded px-2 py-1">
-                                                {comment}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                ) : (
-                                    <span className="text-gray-400 text-sm">No comments yet.</span>
-                                )}
-                            </div> */}
+                            </div>
+                            {comment_postId[post.id] && <div><Comments vlaue={post.id}/></div>}
                         </div>
                     ))
                 ) : (

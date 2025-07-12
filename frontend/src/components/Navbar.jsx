@@ -25,11 +25,10 @@ const Navbar = () => {
     return (
         <div>
             <nav className="w-full bg-white shadow px-6 py-4 flex items-center justify-between">
-                {/* Left: Logo */}
-                <div className="flex-1">
+                <Link to={"/"} ><div className="flex-1">
                     <h1 className="font-bold text-2xl">YOUR-BLOG</h1>
-                </div>
-                {/* Center: Search Bar */}
+                </div></Link>
+                
                 <div className="flex-1 flex justify-center">
                     <input
                         type="text"
@@ -53,20 +52,22 @@ const Navbar = () => {
                     </Link>
                 </div>)}
                 {loginCred.username && (
-                    <div className="flex items-center gap-3" onClick={openDashboard}>
+                    <div className="flex gap-4 align-center">
                         <button
                             className="relative focus:outline-none"
                             onClick={() => setShowNotifications((prev) => !prev)}
                         >
                             <Bell className="w-7 h-7 text-blue-500 hover:text-blue-700 transition" />
-                            <span className="absolute top-0 right-0 block h-2 w-2 rounded-full ring-2 ring-white bg-red-500"></span>
+                            {/* <span className="absolute top-0 right-0 block h-2 w-2 rounded-full ring-2 ring-white bg-red-500"></span> */}
                         </button>
+                    <div className="flex items-center gap-3" onClick={openDashboard}>
                         <img
                             src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS2IYhSn8Y9S9_HF3tVaYOepJBcrYcd809pBA&s"
                             alt={loginCred.username}
                             className="w-9 h-9 rounded-full border-2 border-blue-400 shadow"
                         />
                         <span className="font-semibold text-blue-700">{loginCred.username}</span>
+                    </div>
                     </div>
                 )}
             </nav>

@@ -5,7 +5,9 @@ import { Check, X } from "lucide-react";
 const AllNotifications = ({ value }) => {
     const { loginCred } = useAuth();
     const [allFriendreq, setAllFreiendreq] = useState([{ email: "", username: "", created_at: "", request_id: "" }])
-    const [allFreiendreqReceive, setReceive]=useState([{ email: "", username: "", created_at: "", request_id: "" }])
+    const [allFreiendreqReceive, setReceive] = useState([{ email: "", username: "", created_at: "", request_id: "" }])
+    const [pendingSent, setPendingSent] = useState(false)
+    const [pendingReceive, setPendingReceive] = useState(false)
     useEffect(() => {
         if (value) {
             const getAllSentRequest = async () => {
@@ -44,49 +46,53 @@ const AllNotifications = ({ value }) => {
         }
     }, [value, loginCred.token]);
 
-    useEffect(()=>{
-        console.log(allFreiendreqReceive);
-        
-    },[allFreiendreqReceive])
-
-    const handleAccept=async(id,sender)=>{
-        try{
-            const response=await fetch(`http://localhost:8080/fr/?action=accept&request_id=${id}&sender=${sender}`,{
-                method:"PUT",
-                headers:{
-                    'content-type':'application/json',
-                    'authorization':`Bearer ${loginCred.token}`
+    const handleAccept = async (id, sender) => {
+        try {
+            const response = await fetch(`http://localhost:8080/fr/?action=accept&request_id=${id}&sender=${sender}`, {
+                method: "PUT",
+                headers: {
+                    'content-type': 'application/json',
+                    'authorization': `Bearer ${loginCred.token}`
                 }
             })
-            const data=await response.json();
+            const data = await response.json();
             console.log(data)
-        }catch(err){
+        } catch (err) {
             console.log('Error in accepting Friend Request', err);
         }
     }
-    const handleReject=async()=>{
-        try{
-            const response=await fetch(`http://localhost:8080/fr/?action=reject&request_id=${id}&sender=${sender}`,{
-                method:"PUT",
-                headers:{
-                    'content-type':'application/json',
-                    'authorization':`Bearer ${loginCred.token}`
+    const handleReject = async () => {
+        try {
+            const response = await fetch(`http://localhost:8080/fr/?action=reject&request_id=${id}&sender=${sender}`, {
+                method: "PUT",
+                headers: {
+                    'content-type': 'application/json',
+                    'authorization': `Bearer ${loginCred.token}`
                 }
             })
-            const data=await response.json();
+            const data = await response.json();
             console.log(data)
-        }catch(err){
+        } catch (err) {
             console.log('Error in rejecting Friend Request', err);
         }
     }
 
     return (
         <div className="px-2 py-2">
-            {allFriendreq.length === 0 && allFreiendreqReceive.length===0 && (
+            {allFriendreq.length === 0 && allFreiendreqReceive.length === 0 && (
                 <div className="text-gray-400 text-center py-8">No notifications</div>
             )}
             <div className="flex flex-col gap-3">
-                {allFriendreq.map((e, idx) => (
+                <div
+                    className="text-lg font-bold text-indigo-700 flex items-center justify-between cursor-pointer select-none px-3 py-2 rounded-lg hover:bg-indigo-50 transition"
+                    onClick={() => setPendingSent(!pendingSent)}
+                >
+                    <span>Pending Friend Request Sent</span>
+                    <span className="ml-3 flex items-center justify-center w-7 h-7 text-base text-red-700 bg-red-100 rounded-full font-semibold shadow">
+                        {allFriendreq.length}
+                    </span>
+                </div>
+                {pendingSent && allFriendreq.map((e, idx) => (
                     <div
                         key={e.request_id || idx}
                         className="flex items-center justify-between bg-blue-50 hover:bg-blue-100 rounded-lg px-4 py-3 shadow-sm transition"
@@ -105,7 +111,17 @@ const AllNotifications = ({ value }) => {
                         </div>
                     </div>
                 ))}
-                {allFreiendreqReceive.map((e,idx)=>(
+                <div
+                    className="text-lg font-bold text-indigo-700 flex items-center justify-between cursor-pointer select-none px-3 py-2 rounded-lg hover:bg-indigo-50 transition"
+                    onClick={() => setPendingReceive(!pendingReceive)}
+                >
+                    <span>Accept/Reject Friend Request</span>
+                    <span className="ml-3 flex items-center justify-center w-7 h-7 text-base text-red-700 bg-red-100 rounded-full font-semibold shadow">
+                        {allFreiendreqReceive.length}
+                    </span>
+                </div>
+                {pendingReceive && allFreiendreqReceive.map((e, idx) => (
+
                     <div
                         key={e.request_id || idx}
                         className="flex items-center justify-between bg-blue-50 hover:bg-blue-100 rounded-lg px-4 py-3 shadow-sm transition"
@@ -123,13 +139,13 @@ const AllNotifications = ({ value }) => {
                             </span>
                             <div className="flex gap-2 mt-1">
                                 <button className="p-1 rounded-full hover:bg-green-100 transition"
-                                    onClick={()=>handleAccept(e.request_id,e.username)}
+                                    onClick={() => handleAccept(e.request_id, e.username)}
                                 >
                                     <Check className="w-5 h-5 text-green-600" />
                                 </button>
                                 <button className="p-1 rounded-full hover:bg-red-100 transition"
                                     onClick={handleReject}
-                                    >
+                                >
                                     <X className="w-5 h-5 text-red-600" />
                                 </button>
                             </div>
