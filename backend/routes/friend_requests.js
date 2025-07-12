@@ -35,9 +35,15 @@ router.post(
         [sender_name, receiver_name, receiver_name, sender_name]
       );
 
-      if (rows.length !== 0) {
+      if (rows.length !== 0 && rows[0].status === "pending") {
         const err = new Error("Request Already Exists");
         err.code = "REQUEST_ALREADY_EXISTS";
+        throw err;
+      }
+
+      if (rows.length !== 0 && rows[0].status === "accepted") {
+        const err = new Error("Already Friends!");
+        err.code = "ALREADY_FRIENDS";
         throw err;
       }
 
@@ -46,13 +52,13 @@ router.post(
         [sender_name, receiver_name]
       );
 
-      return res.status(201).json({ 
-        message: "Request Sent" ,
+      return res.status(201).json({
+        message: "Request Sent",
         request: {
           id: req_id[0].insertId,
           sender: sender_name,
-          receiver: receiver_name
-        }
+          receiver: receiver_name,
+        },
       });
     } catch (err) {
       console.log("Error Sending Friend Request", err);
@@ -61,6 +67,9 @@ router.post(
         return res.status(403).json({ message: err.message });
       }
       if (err.code === "REQUEST_ALREADY_EXISTS") {
+        return res.status(403).json({ message: err.message });
+      }
+      if (err.code === "ALREADY_FRIENDS") {
         return res.status(403).json({ message: err.message });
       }
 
@@ -77,7 +86,7 @@ router.put(
   validate({ query: update_fr_schema, headers: bearerSchema }),
   authentication,
   async (req, res) => {
-    const { action, request_id, sender } = req.query;
+    const { action, request_id } = req.query;
     // console.log(sender)
     // const user_id = req.user.id;
     const receiver_name = req.user.username;
@@ -88,7 +97,7 @@ router.put(
         [request_id]
       );
       console.log(rows);
-      
+
       if (rows.length === 0) {
         const err = new Error("Request ID does not exist");
         err.code = "INVALID_REQUEST_ID";
@@ -117,10 +126,12 @@ router.put(
         "UPDATE friend_request SET status=? where request_id=?",
         [`${action}ed`, request_id]
       );
-      if(action==='accept'){
-        await db_connect.execute("Insert into friends (user1, user2) values(?,?)",
-          [receiver_name,sender]
-        )
+
+      if (action === "reject") {
+        await db_connect.execute(
+          "DELETE FROM friend_request WHERE request_id=? LIMIT 1",
+          [request_id]
+        );
       }
 
       return res.status(200).json({ message: `Request ${action}ed` });
@@ -170,7 +181,7 @@ router.get(
       }
       const [rows] = await db_connect.execute(query, [username]);
       // console.log(rows);
-      
+
       return res.status(200).json(rows);
     } catch (err) {
       console.log("Error Fetching Friends List", err);
