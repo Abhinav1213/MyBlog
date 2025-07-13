@@ -1,27 +1,33 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import { User, Mail, Users, Shield } from "lucide-react";
+import { User, Mail, Users, Shield, Check } from "lucide-react";
 import { useAuth } from "../context/authContext";
 import PostModal from "../components/PostModal";
 import { useNavigate } from "react-router-dom";
 import Comments from "../components/Comments";
+import { toast } from 'react-toastify';
+import { X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const UserProfile = () => {
     const { name } = useParams();
     const [user, setUser] = useState(null);
     const [posts, setPosts] = useState([])
     const [close, setClose] = useState(false)
-    const { loginCred, setLoginCred } = useAuth()
+    const loginCred = JSON.parse(localStorage.getItem('loginCred'));
+    const { setLoginCred } = useAuth()
     const [comment_postId, setComment_postId] = useState({})
+    const [friends, setFriends] = useState([])
+    const [status, setStatus] = useState("pending")
     const navigate = useNavigate()
+    const [frnd_pop, setFrnd_pop] = useState(false);
 
     const handleLogout = () => {
         localStorage.removeItem('loginCred')
         setLoginCred({ username: "", email: "", token: "" });
         navigate("/login")
     }
-
     useEffect(() => {
         const fetchUser = async () => {
             try {
@@ -66,13 +72,49 @@ const UserProfile = () => {
             } catch (err) {
                 console.error("failed to fetch user Post", err);
             }
+        };
+        const ckeckStatus = async () => {
+            try {
+                const response = await fetch(`http://localhost:8080/fr/status?name=${name}`, {
+                    method: "GET",
+                    headers: {
+                        'content-type': 'application/json',
+                        'authorization': ` Bearer ${loginCred.token}`
+                    }
+                })
+                const data = await response.json();
+                setStatus(data[0].status);
+                // console.log(data);
+            } catch (err) {
+                console.log("Error in checking status", err);
+                toast.error("Error in checking status")
+            }
+        }
+        const acceptedFriends = async () => {
+            try {
+                const response = await fetch(`http://localhost:8080/fr/accept?username=${name}`, {
+                    method: "GET",
+                    headers: {
+                        'content-type': 'application/json',
+                    }
+                })
+                const data = await response.json();
+                // console.log(data);
+                setFriends(data);
+            } catch (err) {
+                console.log("Error in getting real Friends", err);
+            }
         }
         fetchUser();
         fetchPosts();
+        acceptedFriends();
+        if (loginCred && loginCred.username !== name) {
+            ckeckStatus();
+        }
     }, [name]);
 
     const openComment = (post_id) => {
-        
+
         setComment_postId(prev => ({
             ...prev,
             [post_id]: !comment_postId[post_id]
@@ -102,6 +144,11 @@ const UserProfile = () => {
         }
 
     }
+
+    const allFriends = () => {
+        setFrnd_pop(true)
+    }
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-200">
             <Navbar />
@@ -124,31 +171,78 @@ const UserProfile = () => {
                             <Mail className="w-5 h-5 text-blue-400" />
                             <span className="font-medium">{user.email}</span>
                         </div>
-                        {/* <div className="flex items-center gap-2 text-gray-600 mb-2">
-                            <Users className="w-5 h-5 text-blue-400" />
-                            <span className="font-medium">{user.followers} Followers</span>
-                        </div> */}
-                        {loginCred.username === name && (
-                            <button
-                                onClick={newPost}
-                                className="flex items-center gap-2 px-6 py-2 mb-4 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-full font-semibold shadow-lg hover:scale-105 hover:from-blue-600 hover:to-blue-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                                </svg>
-                                New Post
-                            </button>
-                        )}
-                        <button
-                            className=" text-sm text-red-800 px-4 py-2 bg-red-200 rounded-lg hover:bg-red-400 transition font-semibold shadow"
+
+                        <div className="flex justify-between align-centre gap-2 mb-2">
+                            <div>
+                                {loginCred && loginCred.username === name && (
+                                    <button
+                                        onClick={newPost}
+                                        className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-full font-semibold shadow-lg hover:scale-105 hover:from-blue-600 hover:to-blue-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        New Post
+                                    </button>
+                                )}
+                            </div>
+                            <div>
+                                {loginCred && loginCred.username !== name && status === 'pending' && (<div>
+                                    <button className="bg-gray-400 px-4 py-2 rounded-lg hover:scale-105 transition-all duration-200" onClick={sendFriendRequest}>Add Friend</button>
+                                </div>)}
+                                {loginCred && loginCred.username !== name && status === 'accepted' && (<div>
+                                    <button className="bg-green-400 px-4 py-2 rounded-lg hover:scale-105 transition-all duration-200">Allready a Friend</button>
+                                </div>)}
+                            </div>
+                            <div className="bg-black text-white px-4 py-2 rounded-lg hover:scale-105 transition-all duration-200">
+                                <button onClick={allFriends}>{friends.length} Friends</button>
+                            </div>
+                            <AnimatePresence>
+                                {frnd_pop && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 30 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: 30 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="fixed inset-0 flex justify-center items-center bg-black/50 z-50"
+                                    >
+                                        <div className="bg-white rounded-xl p-6 max-h-[70vh] w-[90vw] max-w-md overflow-y-auto shadow-xl relative">
+                                            <button
+                                                onClick={() => setFrnd_pop(!frnd_pop)}
+                                                className="absolute top-2 right-2 text-gray-600 hover:text-red-500"
+                                            >
+                                                <X />
+                                            </button>
+                                            <h2 className="text-xl font-semibold mb-4">Friends List</h2>
+                                            <ul className="space-y-2">
+                                                {friends.map((friend) => (
+                                                    <div  key={friend.id}>
+                                                        <div className="flex justify-between align-center ">
+                                                            <li
+                                                                className="p-3 bg-gray-100 rounded-md text-gray-800 cursor-pointer hover:scale-105 transition-all duration-200"
+                                                                onClick={() => { navigate(`/user/${friend.username}`); setFrnd_pop(false) }}
+                                                            >
+                                                                {friend.username}
+                                                            </li>
+                                                            <div className="px-5 py-3 bg-black rounded-xl text-white hover:bg-red-400 hover:text-red-800 cursor-pointer hover:scale-105 transition-all duration-200">
+                                                                Unfriend
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                        {loginCred && loginCred.username === name && (<button
+                            className=" text-sm text-red-800 px-4 py-2 bg-red-200 rounded-lg hover:bg-red-400 transition font-semibold shadow hover:scale-110 transition-all duration-200"
                             onClick={handleLogout}
                         >
                             Logout
-                        </button>
-                        {/* all-friend, followers and following and add_friends */}
-                        {loginCred.username !== name && (<div>
-                            <button className="bg-gray-400 p-3 rounded-lg mt-2" onClick={sendFriendRequest}>Add Friend</button>
-                        </div>)}
+                        </button>)}
                     </div>
                 ) : (
                     <div className="text-center text-blue-700 text-xl font-semibold animate-pulse">
@@ -189,7 +283,7 @@ const UserProfile = () => {
                                     Comments
                                 </h5>
                             </div>
-                            {comment_postId[post.id] && <div><Comments vlaue={post.id}/></div>}
+                            {comment_postId[post.id] && <div><Comments vlaue={post.id} /></div>}
                         </div>
                     ))
                 ) : (

@@ -26,6 +26,8 @@ const Signin = () => {
                     username: form.username,
                 })
             })
+            const data=await response.json();
+            console.log(data);
             if(response.ok){
                 setLoginCred({username: data.user.username, email: data.user.email, token:data.token})
                 navigate("/")

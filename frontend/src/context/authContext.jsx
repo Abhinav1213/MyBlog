@@ -17,6 +17,7 @@ export const AuthProvider=(props)=>{
         try{
             const decode=jwtDecode(token)
             const isExpired=decode.exp*1000<Date.now();
+            
             if(!isExpired){
                 setLoginCred(data);
             }
@@ -34,7 +35,8 @@ export const AuthProvider=(props)=>{
     if (loginCred && loginCred.username) {
         localStorage.setItem('loginCred', JSON.stringify(loginCred));
     }
-}, [loginCred]);
+    }, [loginCred]);
+
     return(
         <AuthContext.Provider value={{loginCred, setLoginCred, allUsers, setAllUsers}}>
             {props.children}

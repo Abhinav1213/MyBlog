@@ -197,12 +197,10 @@ router.get(
 );
 
 router.get(
-  "/",
-  validate({ headers: bearerSchema }),
-  authentication,
+  "/accept",
   async (req, res) => {
     // const user_id = req.user.id;
-    const username = req.user.username;
+    const username = req.query.username;
     try {
       const [rows] = await db_connect.execute(
         "SELECT u.id, u.username FROM user u JOIN friend_request f ON ((f.sender_name = u.username AND f.receiver_name = ?) OR (f.sender_name = ? AND f.receiver_name = u.username)) WHERE f.status = 'accepted';",
@@ -219,5 +217,30 @@ router.get(
     }
   }
 );
+router.get(
+  "/status",
+  validate({ headers: bearerSchema }),
+  authentication,
+  async (req, res) => {
+    // const user_id = req.user.id;
+    const username = req.user.username;
+    const {name}=req.query
+    try {
+      const [rows] = await db_connect.execute(
+        "SELECT status from friend_request where (sender_name=? and receiver_name=?) OR (receiver_name=? and sender_name=?)",
+        [username,name, username,name]
+      );
+
+      return res.status(200).json(rows);
+    } catch (err) {
+      console.log("Error Fetching Friends List", err);
+      return res.status(500).json({
+        message: "Server Error",
+        error: process.env.NODE_ENV === "development" ? err.message : undefined,
+      });
+    }
+  }
+);
+
 
 export default router;

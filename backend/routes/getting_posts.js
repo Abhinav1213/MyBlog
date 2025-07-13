@@ -24,7 +24,6 @@ router.get("/allPosts", async (req, res) => {
   }
 });
 
-//security->only author can do this:--
 router.delete(
   "/post/:id",
   validate({ headers: bearerSchema }),
